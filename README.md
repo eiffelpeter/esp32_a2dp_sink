@@ -1,3 +1,6 @@
+The cheap a2dp module with serious pop-noise and can not mute FM radio.  
+So I build this project which use esp32 + ti pcm5102.  
+
 ## Install esp-idf enviroment on ubuntu 22.04
 [refer](https://docs.espressif.com/projects/esp-idf/en/release-v5.4/esp32/get-started/linux-macos-setup.html#)  
 
@@ -22,6 +25,8 @@ idf.py build
 4. Download and run `idf.py -p /dev/ttyUSB1 flash monitor`.  
 5. open your phone to search bt and pair, then play music.  
 6. If you want to listen FM radio, tund off bt on your phone.  
+![IMAGE ALT TEXT HERE](./doc/iphone_search_bt.jpg)
+
 
 ## gpios 
 | esp32 |          |
@@ -38,11 +43,11 @@ idf.py build
 | low  | mute pcm5102, unmute FM radio |
 
 
-## power 
+## power regulator
 ![IMAGE ALT TEXT HERE](./doc/power_ldo.png)  
 ![IMAGE ALT TEXT HERE](./doc/power_source.jpg)
 
-## pcm5102 config ( green circle )
+## pcm5102 config ( green )
 ![IMAGE ALT TEXT HERE](./doc/pcm5102_config.jpg)  
 
 ## esp32 and pcm5102 connection
@@ -57,11 +62,15 @@ idf.py build
 ## connect esp32 to car stereo ( remove tape and cd player )   
 ![IMAGE ALT TEXT HERE](./doc/connect_esp32_to_car_stereo.JPG)  
 
-## install on car with phone holder
+## assemble in car with phone holder
 ![IMAGE ALT TEXT HERE](./doc/install_on_car.jpg)  
 
-## You can use ESP32-DevKitC WROVER to develop.
-![IMAGE ALT TEXT HERE](./doc/ESP32-DevKitC-WROVER.jpg) 
+## Can Use ESP32-DevKit WROOM to develop.
+![IMAGE ALT TEXT HERE](./doc/ESP32-DevKitC-WROOM.jpg)  
+
+## Support more codec
+you can refer [this](https://github.com/cfint/esp32-a2dp-sink) to develop.  
+but it need more memory, have to use `WROVER` DevKit.  
 
 ## Reference
 [link](https://github.com/espressif/esp-idf/issues/14795)  
