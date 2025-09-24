@@ -25,6 +25,8 @@
 #include "esp_a2dp_api.h"
 #include "esp_avrc_api.h"
 
+#include "driver/gpio.h"
+
 /* device name */
 static const char local_device_name[] = CONFIG_EXAMPLE_LOCAL_DEVICE_NAME;
 
@@ -159,8 +161,8 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
         esp_avrc_tg_register_callback(bt_app_rc_tg_cb);
 
         esp_avrc_rn_evt_cap_mask_t evt_set = {0};
-        esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_SET, &evt_set, ESP_AVRC_RN_VOLUME_CHANGE);
-        assert(esp_avrc_tg_set_rn_evt_cap(&evt_set) == ESP_OK);
+        //esp_avrc_rn_evt_bit_mask_operation(ESP_AVRC_BIT_MASK_OP_SET, &evt_set, ESP_AVRC_RN_VOLUME_CHANGE);
+        //assert(esp_avrc_tg_set_rn_evt_cap(&evt_set) == ESP_OK);
 
         assert(esp_a2d_sink_init() == ESP_OK);
         esp_a2d_register_callback(&bt_app_a2d_cb);
@@ -182,6 +184,15 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
     }
 }
 
+#define CODEC_UNMUTE_GPIO 19
+#define CODEC_STANDBY_LED 22
+
+void unmute_codec(bool unmute)
+{
+	gpio_set_level(CODEC_UNMUTE_GPIO, unmute);
+	gpio_set_level(CODEC_STANDBY_LED, !unmute);
+
+}
 /*******************************
  * MAIN ENTRY POINT
  ******************************/
@@ -189,6 +200,16 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
 void app_main(void)
 {
     char bda_str[18] = {0};
+
+    gpio_reset_pin(CODEC_UNMUTE_GPIO);
+    /* Set the GPIO as a push/pull output */
+    gpio_set_direction(CODEC_UNMUTE_GPIO, GPIO_MODE_OUTPUT);
+    gpio_set_level(CODEC_UNMUTE_GPIO, 0);
+
+    gpio_reset_pin(CODEC_STANDBY_LED);
+    gpio_set_direction(CODEC_STANDBY_LED, GPIO_MODE_OUTPUT);
+    gpio_set_level(CODEC_STANDBY_LED, 1);
+
     /* initialize NVS ??it is used to store PHY calibration data */
     esp_err_t err = nvs_flash_init();
     if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {

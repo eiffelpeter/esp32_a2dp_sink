@@ -29,6 +29,8 @@
 
 #include "sys/lock.h"
 
+extern void unmute_codec(bool unmute);
+
 /* AVRCP used transaction labels */
 #define APP_RC_CT_TL_GET_CAPS            (0)
 #define APP_RC_CT_TL_GET_META_DATA       (1)
@@ -297,12 +299,14 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
         ESP_LOGI(BT_AV_TAG, "A2DP connection state: %s, [%02x:%02x:%02x:%02x:%02x:%02x]",
             s_a2d_conn_state_str[a2d->conn_stat.state], bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
         if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_DISCONNECTED) {
+            unmute_codec(0);
             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
             bt_i2s_driver_uninstall();
             bt_i2s_task_shut_down();
         } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
             esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
             bt_i2s_task_start_up();
+            unmute_codec(1);
         } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTING) {
             bt_i2s_driver_install();
         }
@@ -315,6 +319,7 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
         s_audio_state = a2d->audio_stat.state;
         if (ESP_A2D_AUDIO_STATE_STARTED == a2d->audio_stat.state) {
             s_pkt_cnt = 0;
+            unmute_codec(1);
         }
         break;
     }
@@ -537,13 +542,6 @@ static void bt_av_hdl_avrc_tg_evt(uint16_t event, void *p_param)
         uint8_t *bda = rc->conn_stat.remote_bda;
         ESP_LOGI(BT_RC_TG_TAG, "AVRC conn_state evt: state %d, [%02x:%02x:%02x:%02x:%02x:%02x]",
                  rc->conn_stat.connected, bda[0], bda[1], bda[2], bda[3], bda[4], bda[5]);
-        if (rc->conn_stat.connected) {
-            /* create task to simulate volume change */
-            xTaskCreate(volume_change_simulation, "vcsTask", 2048, NULL, 5, &s_vcs_task_hdl);
-        } else {
-            vTaskDelete(s_vcs_task_hdl);
-            ESP_LOGI(BT_RC_TG_TAG, "Stop volume change simulation");
-        }
         break;
     }
     /* when passthrough commanded, this event comes */
@@ -608,9 +606,9 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
     write_ringbuf(data, len);
 
     /* log the number every 100 packets */
-    if (++s_pkt_cnt % 100 == 0) {
-        ESP_LOGI(BT_AV_TAG, "Audio packet count: %"PRIu32, s_pkt_cnt);
-    }
+    //if (++s_pkt_cnt % 100 == 0) {
+    //    ESP_LOGI(BT_AV_TAG, "Audio packet count: %"PRIu32, s_pkt_cnt);
+    //}
 }
 
 void bt_app_rc_ct_cb(esp_avrc_ct_cb_event_t event, esp_avrc_ct_cb_param_t *param)
